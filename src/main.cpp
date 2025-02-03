@@ -16,9 +16,16 @@ int main()
 
     if (input.compare(exit) == 0)
     {
-      break;
+      return 0;
     }
+    else if (input.find("echo ") != std::string::npos)
+    {
+      std::cout << input.substr(5) << std::endl;
+    }
+    else
+    {
 
-    std::cout << input << ": command not found" << std::endl;
+      std::cout << input << ": command not found" << std::endl;
+    }
   }
 }
