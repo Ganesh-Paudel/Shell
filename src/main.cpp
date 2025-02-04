@@ -1,13 +1,27 @@
+#include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include <filesystem>
+#include <sstream>
+
 std::vector<std::string> commands = {"exit", "echo", "type"};
+
+enum validCommands
+{
+  echo,
+  cd,
+  exit0,
+  type,
+  invalid,
+};
 
 std::string removeWhiteSpaces(const std::string &str);
 std::string commandFinder(const std::string &text);
-bool validCommand(const std::string &command);
-void commandAssigner(const std::string &cmd, const std::string &txt);
+void commandAssigner(validCommands cmd, std::string &txt);
+validCommands validCommand(const std::string &cmd);
+std::string filePath(const std::string &command);
 
 int main()
 {
@@ -17,20 +31,27 @@ int main()
 
   std::string input;
   std::string command;
-  std::string exit = "exit 0";
-  while (true)
+  bool running = true;
+
+  while (running)
   {
+    // cmd like appearance with dollar sign and input for the user
     std::cout << "$ ";
     std::getline(std::cin, input);
-
+    // finding the command from the input using commandFinder function
     command = commandFinder(input);
-    if (validCommand(command))
+    validCommands cmd = validCommand(command);
+
+    if (cmd != invalid)
     {
-      if (command == "exit")
+      switch (cmd)
       {
-        return 0;
+      case exit0:
+        running = false;
+        break;
+      default:
+        commandAssigner(cmd, input);
       }
-      commandAssigner(command, input);
     }
     else
     {
@@ -39,56 +60,96 @@ int main()
   }
 }
 
+void commandAssigner(validCommands cmd, std::string &txt)
+{
+  switch (cmd)
+  {
+  case cd:
+
+    break;
+  case echo:
+    txt.erase(0, txt.find(" ") + 1);
+    std::cout << txt << std::endl;
+    break;
+
+  case type:
+    txt.erase(0, txt.find(" ") + 1);
+    if (validCommand(txt) != invalid)
+    {
+      std::cout << txt << " is a shell builtin\n";
+    }
+    else
+    {
+      // std::cout << txt << " not found \n";
+      std::string path = filePath(txt);
+
+      if (path.empty())
+      {
+        std::cout << txt << " not found \n";
+      }
+      else
+      {
+        std::cout << txt << " is " << path << std::endl;
+      }
+    }
+    break;
+
+  default:
+    std::cout << txt << ": command not found" << std::endl;
+    break;
+  }
+}
+
+std::string filePath(const std::string &command)
+{
+  std::string pathEnv = std::getenv("PATH");
+  std::stringstream ss(pathEnv);
+  std::string path;
+
+  while (!ss.eof())
+  {
+    std::getline(ss, path, ':');
+
+    std::string abs_path = path + '/' + command;
+
+    if (std::filesystem::exists(abs_path))
+    {
+      return abs_path;
+    }
+  }
+  return "";
+}
+
+validCommands validCommand(const std::string &command)
+{
+  if (command == "echo")
+    return validCommands::echo;
+  if (command == "cd")
+    return validCommands::cd;
+  if (command == "exit")
+    return validCommands::exit0;
+  if (command == "type")
+    return validCommands::type;
+
+  return invalid;
+}
+
+// Second step finding the right command
 std::string commandFinder(const std::string &text)
 {
+  // clean the data so there are no any leading or trailing whitespaces
   std::string String = removeWhiteSpaces(text);
+  // this finds the first space whicch is the end of the command and the arguments starts
+
   size_t spacePos = String.find(' ');
+  // if we find the space before the ending line
+  // return the substring from beginning to spacepos
   if (spacePos != std::string::npos)
   {
     return String.substr(0, spacePos);
   }
+  // else it's the whole string so return thw whole text
   return String;
-}
-
-bool validCommand(const std::string &command)
-{
-  auto it = std::find(commands.begin(), commands.end(), command);
-  return it != commands.end();
-}
-
-void commandAssigner(const std::string &cmd, const std::string &txt)
-{
-  if (cmd.compare("echo") == 0)
-  {
-    if (txt.size() >= 5)
-    {
-      std::cout << txt.substr(5) << std::endl;
-    }
-    else
-    {
-      std::cout << "Error: Invalid echo command argument" << std::endl;
-    }
-  }
-  else if (cmd.compare("type") == 0)
-  {
-    if (txt.size() >= 5)
-    {
-
-      std::string subCommand = txt.substr(5);
-      if (validCommand(subCommand))
-      {
-        std::cout << subCommand << " is a shell builtin" << std::endl;
-      }
-      else
-      {
-        std::cout << subCommand << ": not found" << std::endl;
-      }
-    }
-    else
-    {
-      std::cout << "Error: Invalid type command" << std::endl;
-    }
-  }
 }
 
 std::string removeWhiteSpaces(const std::string &str)
