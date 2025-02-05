@@ -8,20 +8,26 @@
 
 std::vector<std::string> commands = {"exit", "echo", "type"};
 
-enum validCommands
+enum commandTypes
 {
-  echo,
-  cd,
-  exit0,
-  type,
+  Builtin,
+  Executable,
   invalid,
+};
+
+struct Command
+{
+  commandTypes type;
+  std::string path;
 };
 
 std::string removeWhiteSpaces(const std::string &str);
 std::string commandFinder(const std::string &text);
-void commandAssigner(validCommands cmd, std::string &txt);
-validCommands validCommand(const std::string &cmd);
+void commandAssigner(Command cmd, std::vector<std::string> &args);
+Command validCommand(const std::string &cmd);
 std::string filePath(const std::string &command);
+std::vector<std::string> splitArguments(std::string &txt, const char &splitter);
+std::string findCommandInPath(const std::string &command, const std::string &path);
 
 int main()
 {
@@ -30,7 +36,7 @@ int main()
   std::cerr << std::unitbuf;
 
   std::string input;
-  std::string command;
+  std::vector<std::string> arguments;
   bool running = true;
 
   while (running)
@@ -39,118 +45,202 @@ int main()
     std::cout << "$ ";
     std::getline(std::cin, input);
     // finding the command from the input using commandFinder function
-    command = commandFinder(input);
-    validCommands cmd = validCommand(command);
+    arguments = splitArguments(input, ' ');
+    // command = commandFinder(input);
+    Command command = validCommand(arguments[0]);
 
-    if (cmd != invalid)
+    if (command.type != invalid)
     {
-      switch (cmd)
+      if (arguments[0] == "exit")
       {
-      case exit0:
-        running = false;
-        break;
-      default:
-        commandAssigner(cmd, input);
+        int exit_Code = static_cast<int>(std::stoi(arguments[1]));
+        return exit_Code;
       }
+      commandAssigner(command, arguments);
     }
     else
     {
-      std::cout << command << ": command not found" << std::endl;
+      std::cout << arguments[0] << ": command not found" << std::endl;
     }
   }
 }
 
-void commandAssigner(validCommands cmd, std::string &txt)
+void commandAssigner(Command cmd, std::vector<std::string> &args)
 {
-  switch (cmd)
+
+  if (cmd.type == Builtin)
   {
-  case cd:
 
-    break;
-  case echo:
-    txt.erase(0, txt.find(" ") + 1);
-    std::cout << txt << std::endl;
-    break;
-
-  case type:
-    txt.erase(0, txt.find(" ") + 1);
-    if (validCommand(txt) != invalid)
+    if (args[0] == "echo")
     {
-      std::cout << txt << " is a shell builtin\n";
+      for (int arg = 1; arg < args.size(); arg++)
+      {
+        if (arg != 1)
+        {
+          std::cout << " ";
+        }
+        std::cout << args[arg];
+      }
+      std::cout << "\n";
     }
-    else
+    else if (args[0] == "type")
     {
-      // std::cout << txt << " not found \n";
-      std::string path = filePath(txt);
+      std::string commandArg = args[1];
+      Command secondCommand = validCommand(args[1]);
 
-      if (path.empty())
+      switch (secondCommand.type)
       {
-        std::cout << txt << " not found \n";
-      }
-      else
-      {
-        std::cout << txt << " is " << path << std::endl;
+      case Builtin:
+        std::cout << commandArg << " is a shell builtin\n";
+        break;
+      case Executable:
+        std::cout << commandArg << " is " << secondCommand.path << "\n";
+        break;
+      case invalid:
+        std::cout << commandArg << ": not found\n";
+        break;
+      default:
+        break;
       }
     }
-    break;
+    else if (args[0] == "pwd")
+    {
+      std::cout << std::filesystem::current_path().string() << std::endl;
+    }
+    else if (args[0] == "cd")
+    {
+      std::string newPath = args[1];
+      std::filesystem::path currentPath = std::filesystem::current_path();
+      try
+      {
+        std::vector<std::string> dirs = splitArguments(args[1], '/');
 
-  default:
-    std::cout << txt << ": command not found" << std::endl;
-    break;
+        for (const std::string dir : dirs)
+        {
+          if (dir == "..")
+          {
+            currentPath = currentPath.parent_path();
+          }
+          else if (dir != "." && dir != "")
+          {
+            std::filesystem::path filePath = currentPath / dir;
+            if (std::filesystem::exists(filePath) && std::filesystem::is_directory(filePath))
+            {
+              currentPath = filePath;
+            }
+          }
+        }
+        std::filesystem::current_path(currentPath);
+      }
+      catch (const std::filesystem::filesystem_error &e)
+      {
+        std::cout << args[0] << ": " << newPath << ": No such file or directory" << std::endl;
+      }
+    }
+  }
+  else if (cmd.type == Executable)
+  {
+    std::string commandWithPath = std::filesystem::path(cmd.path).filename().string();
+    for (int i = 1; i < args.size(); i++)
+    {
+      commandWithPath += " ";
+      commandWithPath += args[i];
+    }
+
+    const char *commandPtr = commandWithPath.c_str();
+    system(commandPtr);
   }
 }
 
 std::string filePath(const std::string &command)
 {
   std::string pathEnv = std::getenv("PATH");
-  std::stringstream ss(pathEnv);
   std::string path;
 
-  while (!ss.eof())
+  char *p = &pathEnv[0];
+
+  while (*p != '\0')
   {
-    std::getline(ss, path, ':');
-
-    std::string abs_path = path + '/' + command;
-
-    if (std::filesystem::exists(abs_path))
+    if (*p == ':')
     {
-      return abs_path;
+      std::string exe_path = findCommandInPath(command, path);
+      if (exe_path != "")
+      {
+        return exe_path;
+      }
+      path = "";
+    }
+    else
+    {
+      path += *p;
+    }
+    p++;
+  }
+  std::string exe_path = findCommandInPath(command, path);
+  if (exe_path != "")
+  {
+    return exe_path;
+  }
+  return "";
+}
+
+std::string findCommandInPath(const std::string &command, const std::string &path)
+{
+  for (const auto &entry : std::filesystem::directory_iterator(path))
+  {
+    if (entry.path().filename() == command)
+    {
+      return entry.path().string();
     }
   }
   return "";
 }
 
-validCommands validCommand(const std::string &command)
+Command validCommand(const std::string &command)
 {
-  if (command == "echo")
-    return validCommands::echo;
-  if (command == "cd")
-    return validCommands::cd;
-  if (command == "exit")
-    return validCommands::exit0;
-  if (command == "type")
-    return validCommands::type;
+  std::vector<std::string> builtInCommands = {"echo", "exit", "type", "pwd", "cd"};
 
-  return invalid;
-}
-
-// Second step finding the right command
-std::string commandFinder(const std::string &text)
-{
-  // clean the data so there are no any leading or trailing whitespaces
-  std::string String = removeWhiteSpaces(text);
-  // this finds the first space whicch is the end of the command and the arguments starts
-
-  size_t spacePos = String.find(' ');
-  // if we find the space before the ending line
-  // return the substring from beginning to spacepos
-  if (spacePos != std::string::npos)
+  for (const std::string &cmd : builtInCommands)
   {
-    return String.substr(0, spacePos);
+    if (cmd == command)
+    {
+      Command comm;
+      comm.type = commandTypes::Builtin;
+      return comm;
+    }
   }
-  // else it's the whole string so return thw whole text
-  return String;
+
+  std::string executable_path = filePath(command);
+  if (executable_path != "")
+  {
+    Command comm;
+    comm.type = commandTypes::Executable;
+    comm.path = executable_path;
+    return comm;
+  }
+
+  Command comm;
+  comm.type = commandTypes::invalid;
+  return comm;
 }
+
+// // Second step finding the right command
+// std::string commandFinder(const std::string &text)
+// {
+//   // clean the data so there are no any leading or trailing whitespaces
+//   std::string String = removeWhiteSpaces(text);
+//   // this finds the first space whicch is the end of the command and the arguments starts
+
+//   size_t spacePos = String.find(' ');
+//   // if we find the space before the ending line
+//   // return the substring from beginning to spacepos
+//   if (spacePos != std::string::npos)
+//   {
+//     return String.substr(0, spacePos);
+//   }
+//   // else it's the whole string so return thw whole text
+//   return String;
+// }
 
 std::string removeWhiteSpaces(const std::string &str)
 {
@@ -162,4 +252,28 @@ std::string removeWhiteSpaces(const std::string &str)
     return "";
   }
   return str.substr(start, end - start + 1);
+}
+
+std::vector<std::string> splitArguments(std::string &txt, const char &splitter)
+{
+  std::vector<std::string> args;
+  std::string arg;
+
+  for (char c : txt)
+  {
+    if (c == splitter)
+    {
+      args.push_back(arg);
+      arg = "";
+    }
+    else
+    {
+      arg += c;
+    }
+  }
+  if (arg != "")
+  {
+    args.push_back(arg);
+  }
+  return args;
 }
