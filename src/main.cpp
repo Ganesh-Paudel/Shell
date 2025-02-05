@@ -107,29 +107,47 @@ void commandAssigner(Command cmd, std::vector<std::string> &args)
     {
       std::cout << std::filesystem::current_path().string() << std::endl;
     }
-    else if (args[0] == "cd")
+    else if (args[0] == "cd" && args[1].size() > 0)
     {
       std::string newPath = args[1];
       std::filesystem::path currentPath = std::filesystem::current_path();
       try
       {
-        std::vector<std::string> dirs = splitArguments(args[1], '/');
-
-        for (const std::string dir : dirs)
+        if (newPath[0] == '/' || newPath[0] == '\\')
         {
-          if (dir == "..")
+          if (std::filesystem::exists(newPath))
           {
-            currentPath = currentPath.parent_path();
+            currentPath = newPath;
           }
-          else if (dir != "." && dir != "")
+        }
+        else if (newPath[0] == '.')
+        {
+          std::filesystem::path filePath = currentPath / newPath;
+          if (std::filesystem::exists(filePath))
           {
-            std::filesystem::path filePath = currentPath / dir;
-            if (std::filesystem::exists(filePath) && std::filesystem::is_directory(filePath))
+            currentPath = filePath;
+          }
+        }
+        else
+        {
+          std::vector<std::string> dirs = splitArguments(newPath, '/');
+          for (const std::string dir : dirs)
+          {
+            if (dir == "..")
             {
-              currentPath = filePath;
+              currentPath = currentPath.parent_path();
+            }
+            else if (dir != "")
+            {
+              std::filesystem::path filePath = currentPath / dir;
+              if (std::filesystem::exists(filePath))
+              {
+                currentPath = filePath;
+              }
             }
           }
         }
+
         std::filesystem::current_path(currentPath);
       }
       catch (const std::filesystem::filesystem_error &e)
@@ -223,24 +241,6 @@ Command validCommand(const std::string &command)
   comm.type = commandTypes::invalid;
   return comm;
 }
-
-// // Second step finding the right command
-// std::string commandFinder(const std::string &text)
-// {
-//   // clean the data so there are no any leading or trailing whitespaces
-//   std::string String = removeWhiteSpaces(text);
-//   // this finds the first space whicch is the end of the command and the arguments starts
-
-//   size_t spacePos = String.find(' ');
-//   // if we find the space before the ending line
-//   // return the substring from beginning to spacepos
-//   if (spacePos != std::string::npos)
-//   {
-//     return String.substr(0, spacePos);
-//   }
-//   // else it's the whole string so return thw whole text
-//   return String;
-// }
 
 std::string removeWhiteSpaces(const std::string &str)
 {
