@@ -113,11 +113,34 @@ void commandAssigner(Command cmd, std::vector<std::string> &args)
       std::filesystem::path currentPath = std::filesystem::current_path();
       try
       {
-        if (newPath[0] == '/' || newPath[0] == '\\')
+        if (newPath == "~")
+        {
+          std::string homeDir;
+#if defined(__linux__) || defined(__APPLE__)
+          homeDir = std::getenv("HOME");
+#elif defined(_WIN32)
+          homeDir = std::getenv("USERPROFILE");
+#endif
+          if (!homeDir.empty())
+          {
+            currentPath = homeDir;
+          }
+          else
+          {
+            std::cout << args[0] << ": " << newPath << ": No such file or directory" << std::endl;
+            return;
+          }
+        }
+        else if (newPath[0] == '/' || newPath[0] == '\\')
         {
           if (std::filesystem::exists(newPath))
           {
             currentPath = newPath;
+          }
+          else
+          {
+            std::cout << args[0] << ": " << newPath << ": No such file or directory" << std::endl;
+            return;
           }
         }
         else if (newPath[0] == '.')
@@ -126,6 +149,11 @@ void commandAssigner(Command cmd, std::vector<std::string> &args)
           if (std::filesystem::exists(filePath))
           {
             currentPath = filePath;
+          }
+          else
+          {
+            std::cout << args[0] << ": " << newPath << ": No such file or directory" << std::endl;
+            return;
           }
         }
         else
@@ -143,6 +171,11 @@ void commandAssigner(Command cmd, std::vector<std::string> &args)
               if (std::filesystem::exists(filePath))
               {
                 currentPath = filePath;
+              }
+              else
+              {
+                std::cout << args[0] << ": " << newPath << ": No such file or directory" << std::endl;
+                return;
               }
             }
           }
