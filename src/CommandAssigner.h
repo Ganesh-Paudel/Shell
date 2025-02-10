@@ -9,6 +9,6 @@ public:
     ~CommandAssigner() = default;
 
 private:
-    void echo();
+    void echo(std::string &input);
     void exit(std::string &input, bool &isRunning);
 };
