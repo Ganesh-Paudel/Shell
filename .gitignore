@@ -3,7 +3,8 @@
 #bat file
 *.bat
 run.bat
-
+#vscode
+*.vscode
 # Compiled Object files
 *.slo
 *.lo
