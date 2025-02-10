@@ -12,4 +12,14 @@ int main()
 
   std::string input;
   std::getline(std::cin, input);
+
+  if (validCommand(input))
+  {
+    std::cout << input << ": Command not found" << std::endl;
+  }
+}
+
+bool validCommand(std::string &cmd)
+{
+  return false;
 }
