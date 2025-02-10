@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 
+bool validCommand(std::string &cmd);
+
 int main()
 {
   // Flush after every std::cout / std:cerr
