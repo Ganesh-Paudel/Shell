@@ -17,7 +17,7 @@ int main()
 
   if (!validCommand(input))
   {
-    std::cout << input << ": Command not found" << std::endl;
+    std::cout << input << ": command not found" << std::endl;
   }
 }
 
