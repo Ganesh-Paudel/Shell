@@ -3,28 +3,42 @@
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
+#include <cstdlib> // Include for system()
 
 std::vector<std::string> CommandAssigner::commands = {"exit", "echo", "type"};
 
 bool CommandAssigner::AssignCommands(const std::string &command, const std::string &input, bool &isRunning)
 {
-    if (command == "exit")
+    CommandType commandT = findType(command);
+    switch (commandT)
     {
-        exit(input, isRunning);
+    case CommandType::Builtin:
+        if (command == "exit")
+        {
+            exit(input, isRunning);
+        }
+        else if (command == "echo")
+        {
+            echo(input);
+        }
+        else if (command == "type")
+        {
+            type(input);
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+        break;
+
+    case CommandType::Executable:
+        runExecutable(command, input);
+        break;
+
+    default:
+        break;
     }
-    else if (command == "echo")
-    {
-        echo(input);
-    }
-    else if (command == "type")
-    {
-        type(input);
-    }
-    else
-    {
-        return false;
-    }
-    return true;
 }
 
 void CommandAssigner::exit(const std::string &input, bool &isRunning)
@@ -134,4 +148,14 @@ std::string CommandAssigner::findCommandInPath(const std::string &command, std::
         std::cerr << "Error accessing directory: " << path << " - " << e.what() << std::endl;
     }
     return "";
+}
+
+void CommandAssigner::runExecutable(const std::string &cmd, const std::string &txt)
+{
+    std::string absolutePath = executableCommandPath + " " + txt.substr(cmd.length() + 1);
+    int result = system(absolutePath.c_str());
+    if (result == -1)
+    {
+        std::cerr << "Error running executable: " << absolutePath << std::endl;
+    }
 }
