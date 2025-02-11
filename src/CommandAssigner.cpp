@@ -91,7 +91,7 @@ std::string CommandAssigner::findInPath(const std::string &cmd) const
 
     while (*p != '\0')
     {
-        if (*p == ';')
+        if (*p == ':')
         {
             std::string exePath = findCommandInPath(cmd, path);
             if (!exePath.empty())
@@ -116,12 +116,22 @@ std::string CommandAssigner::findInPath(const std::string &cmd) const
 
 std::string CommandAssigner::findCommandInPath(const std::string &command, std::string &path) const
 {
-    for (const auto &entry : std::filesystem::directory_iterator(path))
+    try
     {
-        if (entry.path().filename() == command)
+        if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
         {
-            return entry.path().string();
+            for (const auto &entry : std::filesystem::directory_iterator(path))
+            {
+                if (entry.path().filename() == command)
+                {
+                    return entry.path().string();
+                }
+            }
         }
+    }
+    catch (const std::filesystem::filesystem_error &e)
+    {
+        std::cerr << "Error accessing directory: " << path << " - " << e.what() << std::endl;
     }
     return "";
 }
