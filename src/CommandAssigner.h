@@ -20,7 +20,7 @@ private:
     void echo(const std::string &input);
     void exit(const std::string &input, bool &isRunning);
     void type(const std::string &cmd);
-    void runExecutable(const std::string &cmd, std::string &txt);
+    void runExecutable(const std::string &cmd, const std::string &txt);
 
 private:
     static std::vector<std::string> commands;

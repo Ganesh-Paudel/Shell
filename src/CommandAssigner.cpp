@@ -30,15 +30,15 @@ bool CommandAssigner::AssignCommands(const std::string &command, const std::stri
             return false;
         }
         return true;
-        break;
 
     case CommandType::Executable:
         runExecutable(command, input);
-        break;
+        return true;
 
     default:
-        break;
+        return false;
     }
+    return false;
 }
 
 void CommandAssigner::exit(const std::string &input, bool &isRunning)
