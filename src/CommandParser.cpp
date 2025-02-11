@@ -1,6 +1,6 @@
 #include "CommandParser.h"
 
-std::string CommandParser::secondArgument(std::string &input)
+std::string CommandParser::secondArgument(const std::string &input)
 {
     size_t firstWhiteSpace = input.find(" ");
 

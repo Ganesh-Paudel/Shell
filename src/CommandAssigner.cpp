@@ -2,10 +2,11 @@
 #include "CommandParser.h"
 #include <iostream>
 #include <algorithm>
+#include <filesystem>
 
 std::vector<std::string> CommandAssigner::commands = {"exit", "echo", "type"};
 
-bool CommandAssigner::AssignCommands(std::string &command, std::string &input, bool &isRunning)
+bool CommandAssigner::AssignCommands(const std::string &command, const std::string &input, bool &isRunning)
 {
     if (command == "exit")
     {
@@ -26,18 +27,25 @@ bool CommandAssigner::AssignCommands(std::string &command, std::string &input, b
     return true;
 }
 
-void CommandAssigner::exit(std::string &input, bool &isRunning)
+void CommandAssigner::exit(const std::string &input, bool &isRunning)
 {
-    std::string exitCode = (input.substr(input.find(" ") + 1));
-    isRunning = false;
+    try
+    {
+        int exitCode = std::stoi(input.substr(input.find(" ") + 1));
+        isRunning = false;
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Invalid exit code: " << input.substr(5) << e.what() << std::endl;
+    }
 }
 
-void CommandAssigner::echo(std::string &input)
+void CommandAssigner::echo(const std::string &input)
 {
     std::cout << input.substr(input.find(" ") + 1) << std::endl;
 }
 
-void CommandAssigner::type(std::string &input)
+void CommandAssigner::type(const std::string &input)
 {
     CommandParser parse;
     std::string cmd = parse.secondArgument(input);
@@ -47,21 +55,73 @@ void CommandAssigner::type(std::string &input)
     case CommandType::Builtin:
         std::cout << cmd << " is a shell builtin" << std::endl;
         break;
+    case CommandType::Executable:
+        std::cout << cmd << " is " << executableCommandPath << std::endl;
+        break;
     default:
         std::cout << cmd << ": not found" << std::endl;
         break;
     }
 }
 
-CommandType CommandAssigner::findType(std::string &cmd)
+CommandType CommandAssigner::findType(const std::string &cmd)
 {
     auto iterator = std::find(commands.begin(), commands.end(), cmd);
     if (iterator != commands.end())
     {
         return CommandType::Builtin;
     }
-    else
+
+    std::string exePath = findInPath(cmd);
+    if (!exePath.empty())
     {
-        return CommandType::Invalid;
+        executableCommandPath = exePath;
+        return CommandType::Executable;
     }
+
+    return CommandType::Invalid;
+}
+
+std::string CommandAssigner::findInPath(const std::string &cmd) const
+{
+    std::string pathEnv = std::getenv("PATH");
+    std::string path;
+
+    char *p = &pathEnv[0];
+
+    while (*p != '\0')
+    {
+        if (*p == ';')
+        {
+            std::string exePath = findCommandInPath(cmd, path);
+            if (!exePath.empty())
+            {
+                return exePath;
+            }
+            path = "";
+        }
+        else
+        {
+            path += *p;
+        }
+        p++;
+    }
+    std::string exePath = findCommandInPath(cmd, path);
+    if (!exePath.empty())
+    {
+        return exePath;
+    }
+    return "";
+}
+
+std::string CommandAssigner::findCommandInPath(const std::string &command, std::string &path) const
+{
+    for (const auto &entry : std::filesystem::directory_iterator(path))
+    {
+        if (entry.path().filename() == command)
+        {
+            return entry.path().string();
+        }
+    }
+    return "";
 }

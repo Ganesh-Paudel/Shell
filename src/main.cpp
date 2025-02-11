@@ -3,5 +3,5 @@
 
 int main()
 {
-    mainLoop loop;
+  mainLoop loop;
 }
