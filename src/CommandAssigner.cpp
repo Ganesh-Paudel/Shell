@@ -152,7 +152,7 @@ std::string CommandAssigner::findCommandInPath(const std::string &command, std::
 
 void CommandAssigner::runExecutable(const std::string &cmd, const std::string &txt)
 {
-    std::string absolutePath = executableCommandPath + " " + txt.substr(cmd.length() + 1);
+    std::string absolutePath = cmd + " " + txt.substr(cmd.length() + 1);
     int result = system(absolutePath.c_str());
     if (result == -1)
     {
