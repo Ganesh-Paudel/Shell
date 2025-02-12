@@ -33,17 +33,27 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
                 argument = input.substr(i + 1, endPos - 2 - cmdLength);
                 argumentS.push_back(argument);
                 argument.clear();
+                return argumentS;
             }
             else
             {
+
                 argument = input.substr(i + 1, endPos - 2 - cmdLength);
                 i = endPos + 1;
             }
         }
+        else if (c == ' ')
+        {
+            if (!argument.empty())
+            {
+                argumentS.push_back(argument);
+                argument.clear();
+            }
+            i++;
+        }
         else
         {
             argument.push_back(c);
-            // std::cout << c << std::endl;
             i++;
         }
     }
