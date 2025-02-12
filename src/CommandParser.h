@@ -11,6 +11,7 @@ public:
 
     std::string secondArgument(const std::string &input);
     std::vector<std::string> splitPath(const std::string &path);
+    std::vector<std::string> parseCommand(const std::string &input);
 
 private:
     std::string text;

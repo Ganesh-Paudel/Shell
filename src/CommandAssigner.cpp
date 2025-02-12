@@ -64,7 +64,12 @@ void CommandAssigner::exit(const std::string &input, bool &isRunning)
 
 void CommandAssigner::echo(const std::string &input)
 {
-    std::cout << input.substr(input.find(" ") + 1) << std::endl;
+    std::vector<std::string> arguments = parse.parseCommand(input);
+    for (const std::string args : arguments)
+    {
+        std::cout << args << " ";
+    }
+    std::cout << '\n';
 }
 
 void CommandAssigner::type(const std::string &input)
