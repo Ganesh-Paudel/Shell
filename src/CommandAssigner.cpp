@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <cstdlib>
 
-std::vector<std::string> CommandAssigner::commands = {"exit", "echo", "type", "pwd"};
+std::vector<std::string> CommandAssigner::commands = {"exit", "echo", "type", "pwd", "cd"};
 
 bool CommandAssigner::AssignCommands(const std::string &command, const std::string &input, bool &isRunning)
 {
@@ -28,6 +28,10 @@ bool CommandAssigner::AssignCommands(const std::string &command, const std::stri
         else if (command == "pwd")
         {
             path.printCurrentDirectory();
+        }
+        else if (command == "cd")
+        {
+            cd(input);
         }
         else
         {
@@ -65,7 +69,7 @@ void CommandAssigner::echo(const std::string &input)
 
 void CommandAssigner::type(const std::string &input)
 {
-    CommandParser parse;
+
     std::string cmd = parse.secondArgument(input);
     CommandType cmdType = findType(cmd);
     switch (cmdType)
@@ -98,4 +102,10 @@ CommandType CommandAssigner::findType(const std::string &cmd)
     }
 
     return CommandType::Invalid;
+}
+
+void CommandAssigner::cd(const std::string &input)
+{
+    std::string dir = parse.secondArgument(input);
+    path.goTo(dir);
 }

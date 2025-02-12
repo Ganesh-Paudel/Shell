@@ -70,3 +70,15 @@ void Path::printCurrentDirectory()
 {
     std::cout << std::filesystem::current_path().string() << std::endl;
 }
+
+void Path::goTo(const std::string &dir)
+{
+    try
+    {
+        std::filesystem::current_path(dir);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "cd: " << dir << ": No such file or directory" << std::endl;
+    }
+}

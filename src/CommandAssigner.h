@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "Path.h"
+#include "CommandParser.h"
 
 enum class CommandType
 {
@@ -21,15 +22,14 @@ private:
     void echo(const std::string &input);
     void exit(const std::string &input, bool &isRunning);
     void type(const std::string &cmd);
-    void runExecutable(const std::string &cmd, const std::string &txt);
+    void cd(const std::string &input);
 
 private:
     static std::vector<std::string> commands;
     CommandType findType(const std::string &cmd);
-    std::string findInPath(const std::string &cmd) const;
-    std::string findCommandInPath(const std::string &command, std::string &path) const;
 
 private:
     std::string executableCommandPath;
+    CommandParser parse;
     Path path;
 };
