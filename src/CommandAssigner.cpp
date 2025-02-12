@@ -3,9 +3,9 @@
 #include <iostream>
 #include <algorithm>
 #include <filesystem>
-#include <cstdlib> // Include for system()
+#include <cstdlib>
 
-std::vector<std::string> CommandAssigner::commands = {"exit", "echo", "type"};
+std::vector<std::string> CommandAssigner::commands = {"exit", "echo", "type", "pwd"};
 
 bool CommandAssigner::AssignCommands(const std::string &command, const std::string &input, bool &isRunning)
 {
@@ -25,6 +25,10 @@ bool CommandAssigner::AssignCommands(const std::string &command, const std::stri
         {
             type(input);
         }
+        else if (command == "pwd")
+        {
+            path.printCurrentDirectory();
+        }
         else
         {
             return false;
@@ -32,7 +36,7 @@ bool CommandAssigner::AssignCommands(const std::string &command, const std::stri
         return true;
 
     case CommandType::Executable:
-        runExecutable(command, input);
+        path.runExecutable(command, input);
         return true;
 
     default:
@@ -86,7 +90,7 @@ CommandType CommandAssigner::findType(const std::string &cmd)
         return CommandType::Builtin;
     }
 
-    std::string exePath = findInPath(cmd);
+    std::string exePath = path.findInPath(cmd);
     if (!exePath.empty())
     {
         executableCommandPath = exePath;
@@ -94,68 +98,4 @@ CommandType CommandAssigner::findType(const std::string &cmd)
     }
 
     return CommandType::Invalid;
-}
-
-std::string CommandAssigner::findInPath(const std::string &cmd) const
-{
-    std::string pathEnv = std::getenv("PATH");
-    std::string path;
-
-    char *p = &pathEnv[0];
-
-    while (*p != '\0')
-    {
-        if (*p == ':')
-        {
-            std::string exePath = findCommandInPath(cmd, path);
-            if (!exePath.empty())
-            {
-                return exePath;
-            }
-            path = "";
-        }
-        else
-        {
-            path += *p;
-        }
-        p++;
-    }
-    std::string exePath = findCommandInPath(cmd, path);
-    if (!exePath.empty())
-    {
-        return exePath;
-    }
-    return "";
-}
-
-std::string CommandAssigner::findCommandInPath(const std::string &command, std::string &path) const
-{
-    try
-    {
-        if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
-        {
-            for (const auto &entry : std::filesystem::directory_iterator(path))
-            {
-                if (entry.path().filename() == command)
-                {
-                    return entry.path().string();
-                }
-            }
-        }
-    }
-    catch (const std::filesystem::filesystem_error &e)
-    {
-        std::cerr << "Error accessing directory: " << path << " - " << e.what() << std::endl;
-    }
-    return "";
-}
-
-void CommandAssigner::runExecutable(const std::string &cmd, const std::string &txt)
-{
-    std::string absolutePath = cmd + " " + txt.substr(cmd.length() + 1);
-    int result = system(absolutePath.c_str());
-    if (result == -1)
-    {
-        std::cerr << "Error running executable: " << absolutePath << std::endl;
-    }
 }

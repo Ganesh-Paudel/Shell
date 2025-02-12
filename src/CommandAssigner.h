@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "Path.h"
 
 enum class CommandType
 {
@@ -30,4 +31,5 @@ private:
 
 private:
     std::string executableCommandPath;
+    Path path;
 };
