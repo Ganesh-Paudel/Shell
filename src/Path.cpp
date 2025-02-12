@@ -75,7 +75,24 @@ void Path::goTo(const std::string &dir)
 {
     try
     {
-        std::filesystem::current_path(dir);
+        if (dir == "~")
+        {
+            std::string homeDir;
+#if defined(__linux__) || defined(__APPLE__)
+            homeDir = std::getenv("HOME");
+#elif defined(_WIN32)
+            homeDir = std::getenv("USERPROFILE");
+#endif
+            if (!homeDir.empty())
+            {
+                std::filesystem::current_path(homeDir);
+            }
+        }
+        else
+        {
+
+            std::filesystem::current_path(dir);
+        }
     }
     catch (const std::exception &e)
     {
