@@ -87,7 +87,7 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
         {
             if (currentCharacter == '\\' && currentPosition + 1 < input.length())
             {
-                if (input[currentPosition + 1] == 'n')
+                if (input[currentPosition + 1] == '\n')
                     argument += '\n';
                 else if (input[currentPosition + 1] == '"')
                     argument += '"';
@@ -105,6 +105,21 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
                 argument += currentCharacter;
             }
         }
+        else if (currentCharacter == '\\' && !insideQuote)
+        {
+            if (currentPosition + 1 < input.length())
+            {
+                if (input[currentPosition + 1] == '\n')
+                {
+                    currentPosition++;
+                }
+                else
+                {
+                    argument += input[currentPosition + 1];
+                    currentPosition++;
+                }
+            }
+        }
         else if (currentCharacter == ' ' && !insideQuote)
         {
             if (!argument.empty())
@@ -116,8 +131,11 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
         else
         {
             argument += currentCharacter;
-        }
-
+        // }
+        // std::cout << "new loop: ->";
+        // std::cout << "current character: " << currentCharacter << std::endl;
+        // std::cout << "ARgument till now: " << argument << std::endl;
+        // std::cout << std::endl;
         currentPosition++;
     }
     if (!argument.empty())
