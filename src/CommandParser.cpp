@@ -10,56 +10,72 @@ std::string CommandParser::secondArgument(const std::string &input)
 
 std::vector<std::string> CommandParser::parseCommand(const std::string &input)
 {
-    std::vector<std::string> argumentS;
+    /*
+    vector that will store the arguments
+    Approach:
+    loop
+     check the current character
+         if it is a single quote
+             then start single quote
+             add all the character literally to it till the end of the quote
+             once end is reached just end single quote
+         if it is a space
+             then check if argument is empty or not
+             if empty
+                 increment the character position
+             else
+                 just add the argument to the vector
+                 clear the argument
+                 increment the character position
+
+     check if argument is empty
+     if not:
+         add the argument to the vector
+     return the vector
+
+    */
+    std::vector<std::string> arguments;
     std::string argument;
-    size_t cmdLength = input.find(" ");
-    // std::cout << cmdLength << std::endl;
-    size_t i = cmdLength + 1;
+    bool insideQuote = false;
+    char activeQuote = '\0';
 
-    while (i < input.length())
+    size_t currentPosition = input.find(" ") + 1;
+
+    while (currentPosition < input.length())
     {
-        char c = input[i];
-        if (c == '\'')
+        char currentCharacter = input[currentPosition];
+        if (currentCharacter == '\'')
         {
-            if (!argument.empty())
+            if (insideQuote)
             {
-                argumentS.push_back(argument);
-                argument.clear();
+                insideQuote = false;
+                activeQuote = '\0';
+                currentPosition++;
+                continue;
             }
-            size_t endPos = input.find("\'", i + 1);
-            // std::cout << endPos << std::endl;
-            if (endPos == std::string::npos)
-            {
-                argument = input.substr(i + 1, endPos - 2 - cmdLength);
-                argumentS.push_back(argument);
-                argument.clear();
-                return argumentS;
-            }
-            else
-            {
+            insideQuote = true;
+            activeQuote = '\'';
+            currentPosition++;
+            continue;
+        }
+        if (insideQuote && activeQuote == '\'')
+        {
+            argument += currentCharacter;
+        }
 
-                argument = input.substr(i + 1, endPos - 2 - cmdLength);
-                i = endPos + 1;
-            }
-        }
-        else if (c == ' ')
+        if (currentCharacter == ' ' && !insideQuote)
         {
             if (!argument.empty())
             {
-                argumentS.push_back(argument);
+                arguments.push_back(argument);
                 argument.clear();
             }
-            i++;
         }
-        else
-        {
-            argument.push_back(c);
-            i++;
-        }
+        currentPosition++;
     }
     if (!argument.empty())
     {
-        argumentS.push_back(argument);
+        arguments.push_back(argument);
     }
-    return argumentS;
+    return arguments;
 }
