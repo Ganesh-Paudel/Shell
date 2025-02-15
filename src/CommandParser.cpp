@@ -131,7 +131,7 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
         else
         {
             argument += currentCharacter;
-        // }
+        }
         // std::cout << "new loop: ->";
         // std::cout << "current character: " << currentCharacter << std::endl;
         // std::cout << "ARgument till now: " << argument << std::endl;
