@@ -46,21 +46,65 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
         char currentCharacter = input[currentPosition];
         if (currentCharacter == '\'')
         {
-            if (insideQuote)
+            if (insideQuote && activeQuote == currentCharacter)
             {
                 insideQuote = false;
                 activeQuote = '\0';
                 currentPosition++;
                 continue;
             }
-            insideQuote = true;
-            activeQuote = '\'';
+            else if (!insideQuote)
+            {
+                insideQuote = true;
+                activeQuote = '\'';
+            }
+            else
+            {
+                argument += currentCharacter;
+            }
+        }
+        else if (currentCharacter == '"')
+        {
+            if (insideQuote && activeQuote == currentCharacter)
+            {
+                insideQuote = false;
+                activeQuote = '\0';
+                currentPosition++;
+                continue;
+            }
+            else if (!insideQuote)
+            {
+
+                insideQuote = true;
+                activeQuote = '"';
+            }
         }
         else if (insideQuote && activeQuote == '\'')
         {
             argument += currentCharacter;
         }
-
+        else if (insideQuote && activeQuote == '"')
+        {
+            if (currentCharacter == '\\' && currentPosition + 1 < input.length())
+            {
+                if (input[currentPosition + 1] == 'n')
+                    argument += '\n';
+                else if (input[currentPosition + 1] == '"')
+                    argument += '"';
+                else if (input[currentPosition + 1] == '\\')
+                    argument += '\\';
+                else
+                {
+                    argument += '\\';
+                    argument += input[currentPosition + 1];
+                }
+                currentPosition++;
+            }
+            else
+            {
+                argument += currentCharacter;
+            }
+        }
         else if (currentCharacter == ' ' && !insideQuote)
         {
             if (!argument.empty())
