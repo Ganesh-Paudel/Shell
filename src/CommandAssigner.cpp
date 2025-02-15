@@ -112,5 +112,6 @@ CommandType CommandAssigner::findType(const std::string &cmd)
 void CommandAssigner::cd(const std::string &input)
 {
     std::string dir = parse.secondArgument(input);
+    std::cout << dir << std::endl;
     path.goTo(dir);
 }
