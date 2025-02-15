@@ -55,15 +55,13 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
             }
             insideQuote = true;
             activeQuote = '\'';
-            currentPosition++;
-            continue;
         }
-        if (insideQuote && activeQuote == '\'')
+        else if (insideQuote && activeQuote == '\'')
         {
             argument += currentCharacter;
         }
 
-        if (currentCharacter == ' ' && !insideQuote)
+        else if (currentCharacter == ' ' && !insideQuote)
         {
             if (!argument.empty())
             {
@@ -71,6 +69,11 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
                 argument.clear();
             }
         }
+        else
+        {
+            argument += currentCharacter;
+        }
+
         currentPosition++;
     }
     if (!argument.empty())
