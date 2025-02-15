@@ -78,6 +78,9 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
                 insideQuote = true;
                 activeQuote = '"';
             }
+            else{
+                argument += '"';
+            }
         }
         else if (insideQuote && activeQuote == '\'')
         {
