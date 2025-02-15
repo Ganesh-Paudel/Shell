@@ -73,7 +73,6 @@ void Path::printCurrentDirectory()
 
 void Path::goTo(const std::string &dir)
 {
-    std::cout << dir.size() << std::endl;
     try
     {
         if (dir == "~")
