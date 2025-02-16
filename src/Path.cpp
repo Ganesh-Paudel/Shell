@@ -1,6 +1,7 @@
 #include "Path.h"
 #include <filesystem>
 #include <iostream>
+#include <vector>
 
 std::string Path::findInPath(const std::string &cmd) const
 {
@@ -58,11 +59,25 @@ std::string Path::findCommandInPath(const std::string &command, std::string &pat
 
 void Path::runExecutable(const std::string &cmd, const std::string &txt)
 {
-    std::string absolutePath = cmd + " " + txt.substr(cmd.length() + 1);
-    int result = system(absolutePath.c_str());
-    if (result == -1)
+    if (cmd[0] == '\'' || cmd[0] == '"')
     {
-        std::cerr << "Error running executable: " << absolutePath << std::endl;
+        std::vector<std::string> command = parse.parseCommand(cmd);
+        std::string absolutePath = command[0] + " " + txt.substr(cmd.length() + 1);
+        int result = system(absolutePath.c_str());
+        if (result == -1)
+        {
+            std::cerr << "Error running executable: " << absolutePath << std::endl;
+        }
+    }
+    else
+    {
+
+        std::string absolutePath = cmd + " " + txt.substr(cmd.length() + 1);
+        int result = system(absolutePath.c_str());
+        if (result == -1)
+        {
+            std::cerr << "Error running executable: " << absolutePath << std::endl;
+        }
     }
 }
 
