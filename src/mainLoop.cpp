@@ -19,9 +19,6 @@ void mainLoop::init()
 
         std::cout << "$ ";
         std::getline(std::cin, input);
-        if (!command.validCommand(input, isRunning))
-        {
-            std::cout << input << ": command not found" << std::endl;
+        !command.validCommand(input, isRunning);
         }
-    }
 }
