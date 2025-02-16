@@ -1,4 +1,5 @@
 #include "Path.h"
+#include "CommandParser.h"
 #include <filesystem>
 #include <iostream>
 #include <vector>
@@ -59,6 +60,7 @@ std::string Path::findCommandInPath(const std::string &command, std::string &pat
 
 void Path::runExecutable(const std::string &cmd, const std::string &txt)
 {
+    CommandParser parse;
     if (cmd[0] == '\'' || cmd[0] == '"')
     {
         std::vector<std::string> command = parse.parseCommand(cmd);
