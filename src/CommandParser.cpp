@@ -38,8 +38,12 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
     std::string argument;
     bool insideQuote = false;
     char activeQuote = '\0';
-
     size_t currentPosition = input.find(" ") + 1;
+
+    if (input.front() == '\'' || input.front() == '"')
+    {
+        currentPosition = 0;
+    }
 
     while (currentPosition < input.length())
     {
@@ -78,7 +82,8 @@ std::vector<std::string> CommandParser::parseCommand(const std::string &input)
                 insideQuote = true;
                 activeQuote = '"';
             }
-            else{
+            else
+            {
                 argument += '"';
             }
         }
